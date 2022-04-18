@@ -9,6 +9,7 @@ import numpy as np
 import torch
 
 from collections import Counter
+from tools.mixup import mixed_data, mixup_criterion
 
 class ModelTrainer:
 
@@ -28,9 +29,18 @@ class ModelTrainer:
 
             inputs, labels = inputs.to(device), labels.to(device)
 
+            if cfg.mixup:
+                mixed_inputs, label_a, label_b, lam = mixed_data(inputs, labels, cfg.mixup_alpha, device)
+                inputs = mixed_inputs
+
             outputs = model(inputs)
             optimizer.zero_grad()
-            loss = loss_f(outputs.cpu(), labels.cpu())
+
+            if cfg.mixup:
+                loss = mixup_criterion(loss_f, outputs.cpu(), label_a.cpu(), label_b.cpu(), lam)
+            else:
+                loss = loss_f(outputs.cpu(), labels.cpu())
+
             loss.backward()
             optimizer.step()
 

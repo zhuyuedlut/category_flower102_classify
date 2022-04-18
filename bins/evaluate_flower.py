@@ -21,7 +21,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 if __name__ == '__main__':
     # config
-    data_dir = os.path.join(cfg.dataset_dir, 'test')
+    data_dir = os.path.join("", 'test')
     path_state_dict = r""
 
     norm_mean = [0.485, 0.456, 0.406]  # imagenet 120万图像统计得来

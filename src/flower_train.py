@@ -26,6 +26,7 @@ from config.flower_config import cfg
 from datasets.flower_102 import FlowerDataset
 from tools.model_trainer import ModelTrainer
 from tools.common_tools import setup_seed, check_data_dir, Logger, show_confMat, plot_line
+from tools.my_loss import LabelSmoothLoss
 
 setup_seed(9527)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -43,10 +44,10 @@ cfg.max_epoch = args.max_epoch if args.max_epoch else cfg.max_epoch
 
 if __name__ == "__main__":
     path_state_dict = os.path.join(BASE_DIR, "..", "..", "data", "pretrained_model", "resnet18-5c106cde.pth")
+
     train_dir = os.path.join(args.data_root_dir, "train")
     valid_dir = os.path.join(args.data_root_dir, "valid")
-    check_data_dir(train_dir)
-    check_data_dir(valid_dir)
+    check_data_dir(train_dir), check_data_dir(valid_dir)
 
     now_time = datetime.now()
     time_str = datetime.strftime(now_time, '%m-%d_%H-%M')

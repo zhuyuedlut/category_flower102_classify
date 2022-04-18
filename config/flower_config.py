@@ -5,13 +5,28 @@
 # @date       : 2022/4/4 11:29 PM
 # @brief      : flower config file
 """
+import os
+import sys
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(BASE_DIR,  '..'))
 
-import torch
 from torchvision import transforms
 from easydict import EasyDict
 
 cfg = EasyDict()
-cfg.dataset_dir = r'/User/zhuyue/Code/datasets/flowers102'
+cfg.model_name = 'se_resnet50'
+
+cfg.mixup = True  # 是否采用mixup
+cfg.mixup_alpha = 1.  # beta分布的参数. beta分布是一组定义在(0,1) 区间的连续概率分布。
+cfg.label_smooth = True  # 是否采用标签平滑
+cfg.label_smooth_eps = 0.01  # 标签平滑超参数 eps
+
+
+data_dir = ''
+cfg.path_resnet18 = os.path.join(data_dir, "pretrained_model", "resnet18-5c106cde.pth")
+cfg.path_vgg16bn = os.path.join(data_dir, "pretrained_model", "vgg16_bn-6c64b313.pth")
+cfg.path_se_res50 = os.path.join(data_dir, "pretrained_model", "seresnet50-60a8950a85b2b.pkl")
+
 cfg.train_bs = 32
 cfg.valid_bs = 64
 cfg.workers = 0
