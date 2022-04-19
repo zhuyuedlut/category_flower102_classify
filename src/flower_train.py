@@ -11,21 +11,17 @@ import sys
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(BASE_DIR, '..'))
+
 import pickle
 import argparse
-import torch
-import numpy as np
 import torch.optim as optim
-import torch.nn as nn
 
-from datetime import datetime
 from torch.utils.data import DataLoader
-from torchvision.models import resnet18
 
 from config.flower_config import cfg
 from datasets.flower_102 import FlowerDataset
 from tools.model_trainer import ModelTrainer
-from tools.common_tools import setup_seed, check_data_dir, Logger, show_confMat, plot_line
+from tools.common_tools import *
 from tools.my_loss import LabelSmoothLoss
 
 setup_seed(9527)
@@ -43,40 +39,26 @@ cfg.train_bs = args.bs if args.bs else cfg.train_bs
 cfg.max_epoch = args.max_epoch if args.max_epoch else cfg.max_epoch
 
 if __name__ == "__main__":
-    path_state_dict = os.path.join(BASE_DIR, "..", "..", "data", "pretrained_model", "resnet18-5c106cde.pth")
-
     train_dir = os.path.join(args.data_root_dir, "train")
     valid_dir = os.path.join(args.data_root_dir, "valid")
     check_data_dir(train_dir), check_data_dir(valid_dir)
 
-    now_time = datetime.now()
-    time_str = datetime.strftime(now_time, '%m-%d_%H-%M')
-    log_dir = os.path.join(BASE_DIR, "..", "..", "results", time_str)  # 根据config中的创建时间作为文件夹名
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
-    path_log = os.path.join(log_dir, 'log.log')
-    logger = Logger(path_log)
-    logger = logger.init_logger()
+    res_dir = os.path.join(BASE_DIR, "..", "..", "results")
+    logger, log_dir = make_logger(res_dir)
 
     train_data = FlowerDataset(root_dir=train_dir, transform=cfg.transforms_train)
     valid_data = FlowerDataset(root_dir=valid_dir, transform=cfg.transforms_valid)
     train_loader = DataLoader(dataset=train_data, batch_size=cfg.train_bs, shuffle=True, num_workers=cfg.workers)
     valid_loader = DataLoader(dataset=valid_data, batch_size=cfg.valid_bs, num_workers=cfg.workers)
 
-    model = resnet18()
-    if os.path.exists(path_state_dict):
-        pretrained_state_dict = torch.load(path_state_dict, map_location="cpu")
-        model.load_state_dict(pretrained_state_dict)  # load pretrain model
-        logger.info("load pretrained model!")
-    else:
-        logger.info("the pretrained model path {} is not exists".format(path_state_dict))
-
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, train_data.cls_num)
+    model = get_model(cfg, train_data.cls_num, logger)
     model.to(device)
 
-    loss_f = nn.CrossEntropyLoss()
+    if cfg.label_smooth:
+        loss_f = LabelSmoothLoss(cfg.label_smooth_eps)
+    else:
+        loss_f = nn.CrossEntropyLoss()
+
     optimizer = optim.SGD(model.parameters(), lr=cfg.lr_init, momentum=cfg.momentum, weight_decay=cfg.weight_decay)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, gamma=cfg.factor, milestones=cfg.milestones)
 

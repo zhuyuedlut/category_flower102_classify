@@ -52,7 +52,8 @@ class FlowerDataset(Dataset):
         idx_imgs = [int(n[6:11]) for n in names_imgs]
 
         path_imgs = [os.path.join(self.root_dir, n) for n in names_imgs]
-        self.img_info = [(p, int(label_array[idx-1]-1)) for p, idx in zip(path_imgs, idx_imgs)]
+        self.img_info = [(p, int(label_array[idx - 1] - 1)) for p, idx in zip(path_imgs, idx_imgs)]
+
 
 if __name__ == "__main__":
     root_dir = os.path.join(cfg.dataset_dir, 'test')

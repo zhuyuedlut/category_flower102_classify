@@ -11,6 +11,7 @@ import torch
 from collections import Counter
 from tools.mixup import mixed_data, mixup_criterion
 
+
 class ModelTrainer:
 
     @staticmethod

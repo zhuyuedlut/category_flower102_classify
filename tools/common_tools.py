@@ -8,9 +8,17 @@
 import os
 import logging
 import torch
+import torch.nn as nn
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+
+
+from datetime import datetime
+from torchvision.models import resnet18
+
+from model.vgg import vgg16_bn
+from model.se_resnet import se_resnet50
 
 
 def setup_seed(seed=12345):
@@ -143,3 +151,42 @@ class Logger:
         logger.addHandler(console_handler)
 
         return logger
+
+
+def make_logger(out_dir):
+    now_time = datetime.now()
+    time_str = datetime.strftime(now_time, '%m-%d_%H-%M')
+    log_dir = os.path.join(out_dir, time_str)
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    path_log = os.path.join(log_dir, 'log.log')
+    logger = Logger(path_log)
+    logger = logger.init_logger()
+    return logger, log_dir
+
+
+def get_model(cfg, cls_num, logger):
+    if cfg.model_name == 'resnet18':
+        model = resnet18()
+        if os.path.exists(cfg.path_resnet18):
+            pretrained_state_dict = torch.load(cfg.path_resnet18, map_location='cpu')
+            model.load_state_dict(pretrained_state_dict)
+            logger.info('load pretrained model!')
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, cls_num)
+    elif cfg.model_name == 'vgg16_bn':
+        model = vgg16_bn()
+        if os.path.exists(cfg.path_vgg16bn):
+            pretrained_state_dict = torch.load(cfg.path_vgg16bn, map_location='cpu')
+            model.load_state_dict(pretrained_state_dict)
+            logger.info('load pretrained model!')
+    elif cfg.model_name == 'se_resnet50':
+        model = se_resnet50()
+        if os.path.exists(cfg.path_se_res50):
+            model.load_state_dict(torch.load(cfg.path_se_res50))
+            logger.info('load pretrained model!')
+        in_feat_num = model.fc.in_features
+        model.fc = nn.Linear(in_feat_num, cls_num)
+    else:
+        raise Exception("Invalid model name. got {}".format(cfg.model_name))
+    return model

@@ -15,12 +15,9 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 
-import config.flower_config as cfg
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 if __name__ == '__main__':
-    # config
     data_dir = os.path.join("", 'test')
     path_state_dict = r""
 
@@ -53,9 +50,9 @@ if __name__ == '__main__':
     class_num = test_loader.dataset.cls_num
     conf_mat = np.zeros((class_num, class_num))
 
+    # 计算置信矩阵
     for i, data in enumerate(test_loader):
         inputs, labels, path_imgs = data
-        # inputs, labels = data
         inputs, labels = inputs.to(device), labels.to(device)
 
         outputs = model(inputs)
